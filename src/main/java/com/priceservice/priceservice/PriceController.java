@@ -3,19 +3,30 @@ package com.priceservice.priceservice;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 @RestController
 public class PriceController {
 		
 		List<Price> priceList = new ArrayList<Price>();
+		
+		@Autowired
+		RestTemplate restTemplate;
 
 		@GetMapping("/price/details/{productId}")
 		public Price getPriceDetails(@PathVariable("productId") Long productid) {
 			
 			Price price = getPrice(productid);
+			
+			Integer excVal = restTemplate
+					.getForObject("http://localhost:8004/exchange/from/USD/to/YEN", ExcVal.class)
+					.getExVal();
+			
+			price.setDiscountPrice(Math.multiplyExact(excVal, price.getDiscountPrice()));
 			
 			return price;
 		}
